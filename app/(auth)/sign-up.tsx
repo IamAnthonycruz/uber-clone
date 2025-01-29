@@ -6,14 +6,76 @@ import InputField from "@/components/InputField";
 import CustomButton from "@/components/CustomButton";
 import { Link } from "expo-router";
 import OAuth from "@/components/OAuth";
+import { useSignUp } from "@clerk/clerk-expo";
+import ReactNativeModal from "react-native-modal";
 
 const SignUp = () => {
+  const { isLoaded, signUp, setActive } = useSignUp();
   const [form, setForm] = useState({
     name: "",
     email: "",
     password: "",
   });
-  const onSignUpPress = async () => {};
+  const [verification, setVerification] = useState({
+    state: "default",
+    error: "",
+    code: "",
+  });
+  const onSignUpPress = async () => {
+    if (!isLoaded) return;
+
+    // Start sign-up process using email and password provided
+    try {
+      await signUp.create({
+        emailAddress: form.email,
+        password: form.password,
+      });
+
+      // Send user an email with verification code
+      await signUp.prepareEmailAddressVerification({ strategy: "email_code" });
+
+      // Set 'pendingVerification' to true to display second form
+      // and capture OTP code
+      setVerification({ ...verification, state: "pending" });
+    } catch (err) {
+      // See https://clerk.com/docs/custom-flows/error-handling
+      // for more info on error handling
+      console.error(JSON.stringify(err, null, 2));
+    }
+  };
+
+  // Handle submission of verification form
+  const onVerifyPress = async () => {
+    if (!isLoaded) return;
+
+    try {
+      // Use the code the user provided to attempt verification
+      const signUpAttempt = await signUp.attemptEmailAddressVerification({
+        code: verification.code,
+      });
+
+      // If verification was completed, set the session to active
+      // and redirect the user
+      if (signUpAttempt.status === "complete") {
+        await setActive({ session: signUpAttempt.createdSessionId });
+        setVerification({ ...verification, state: "success" });
+      } else {
+        // If the status is not complete, check why. User may need to
+        // complete further steps.
+        setVerification({
+          ...verification,
+          error: "Verification failed. Please try again.",
+          state: "failed",
+        });
+      }
+    } catch (err: any) {
+      setVerification({
+        ...verification,
+        error: err.errors[0].message,
+        state: "failed",
+      });
+    }
+  };
   return (
     <ScrollView className="flex-1 bg-white">
       <View className="flex-1 bg-white">
@@ -60,6 +122,23 @@ const SignUp = () => {
             <Text className="text-primary-500">Log In</Text>
           </Link>
         </View>
+        <ReactNativeModal isVisible={verification.state === "success"}>
+          <View className="bg-white px-7 py-9 rounded-2xl min-h-[300px]">
+            <Image
+              source={images.check}
+              className="w-[110px] h-[110px] mx-auto my-5"
+            />
+            <Text className="text-3xl font-JakartaBold text-center">
+              Verified
+            </Text>
+            <Text className="text-base text-gray-400 font-Jakarta text-center">
+              You have successfully verified your account!
+            </Text>
+            <CustomButton>
+              
+            </CustomButton>
+          </View>
+        </ReactNativeModal>
       </View>
     </ScrollView>
   );

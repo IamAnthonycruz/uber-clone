@@ -1,4 +1,4 @@
-import { Stack } from "expo-router";
+import { Redirect, Stack } from "expo-router";
 
 import { useFonts } from "expo-font";
 export default function Layout() {
