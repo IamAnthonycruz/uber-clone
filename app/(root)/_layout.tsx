@@ -1,14 +1,9 @@
-import { StyleSheet, Text, View } from "react-native";
-import React from "react";
-
-const default_layout = () => {
+import { useFonts } from "expo-font";
+import { Stack } from "expo-router";
+export default function Layout() {
   return (
-    <View>
-      <Text>_layout</Text>
-    </View>
+    <Stack>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+    </Stack>
   );
-};
-
-export default default_layout;
-
-const styles = StyleSheet.create({});
+}
