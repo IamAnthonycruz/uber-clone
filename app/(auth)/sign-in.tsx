@@ -21,8 +21,8 @@ const SignIn = () => {
     // Start the sign-in process using the email and password provided
     try {
       const signInAttempt = await signIn.create({
-        identifier: emailAddress,
-        password,
+        identifier: form.email,
+        password: form.password,
       });
 
       // If sign-in process is complete, set the created session as active
@@ -40,7 +40,7 @@ const SignIn = () => {
       // for more info on error handling
       console.error(JSON.stringify(err, null, 2));
     }
-  }, [isLoaded, emailAddress, password]);
+  }, [isLoaded, form.email, form.password]);
   return (
     <ScrollView className="flex-1 bg-white">
       <View className="flex-1 bg-white">
